@@ -11,6 +11,8 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import java.util.concurrent.TimeUnit;
+
 public class Task4_2 {
 
     WebDriver driver;
@@ -34,11 +36,11 @@ public class Task4_2 {
             }
         }
         openCart(driver);
-        Assert.assertEquals(deleteAllItemsFromCart(driver), "There are no items in your cart.");
+        Assert.assertTrue(deleteAllItemsFromCart(driver).contains("There are no items in your cart."));
     }
 
 
-    //@After
+    @After
     public void clean()
     {
         driver.quit();
@@ -82,31 +84,30 @@ public class Task4_2 {
     {
         WebDriverWait wait = new WebDriverWait(driver, 5);
 
-        if(driver.findElement(By.id("box-checkout-customer")).isDisplayed())//driver.findElement(By.name("remove_cart_item")).isEnabled())
+
+        if(driver.findElement(By.id("box-checkout-customer")).isDisplayed())
         {
             driver.findElement(By.cssSelector(".shortcuts .shortcut:nth-of-type(1)")).click();
-            WebElement removeButton;// = driver.findElement(By.name("remove_cart_item"));
 
-            WebElement customerTable = driver.findElement(By.id("box-checkout-customer"));
+            By removeCartItemBy = By.name("remove_cart_item");
+            By tableRow = By.cssSelector("table.dataTable.rounded-corners tr:nth-of-type(1)");
 
-            while (driver.findElement(By.id("box-checkout-customer")).isDisplayed())//removeButton.isEnabled())
-            {
-                wait.until(ExpectedConditions.elementToBeClickable(By.name("remove_cart_item")));
-                //wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("box-checkout-customer")));
-                removeButton = driver.findElement(By.name("remove_cart_item"));
-                removeButton.click();
-                //wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("box-checkout-customer")));
-                /*try{
-                    wait.until(ExpectedConditions.elementToBeClickable(By.name("remove_cart_item")));
-                    //wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("box-checkout-customer")));
-                    //removeButton = driver.findElement(By.name("remove_cart_item"));
-                }
-                catch (Exception ex){
-                    break;
-                }*/
+            do {
+                WebElement tableRowElement = driver.findElement(tableRow);
+                driver.findElement(removeCartItemBy).click();
+                wait.until(ExpectedConditions.stalenessOf(tableRowElement));
             }
+            while (isElementPresent(removeCartItemBy));
         }
-
+        driver.manage().timeouts().implicitlyWait(5, TimeUnit.SECONDS);
         return driver.findElement(By.id("checkout-cart-wrapper")).getText();
+    }
+
+    private boolean isElementPresent(By elementBy)
+    {
+        driver.manage().timeouts().implicitlyWait(0, TimeUnit.SECONDS);
+        boolean result = driver.findElements(elementBy).size()>0;
+        driver.manage().timeouts().implicitlyWait(5, TimeUnit.SECONDS);
+        return  result;
     }
 }
